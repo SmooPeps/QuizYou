@@ -2,6 +2,8 @@
 
 **QuizYou** is a modern, interactive web-based exam and quiz dashboard designed for software engineering teams to assess, track, and master their software engineering knowledge. Built with a responsive, premium glassmorphism interface, this application acts as the foundation for the CS 673 Software Engineering team project.
 
+🚀 **Live Demo:** [https://adarvens.github.io/QuizYou/](https://adarvens.github.io/QuizYou/)
+
 ---
 
 ## 👥 The Team Roster
