@@ -4,6 +4,12 @@
 
 🚀 **Live Demo:** [https://adarvens.github.io/QuizYou/](https://adarvens.github.io/QuizYou/)
 
+### 🛠️ Tech Stack
+*   **Frontend:** HTML5, CSS3 (Custom Glassmorphism), Modern JavaScript (ES6 SPA)
+*   **Data Layer (Initial):** Flat JSON File Databases (`students.json`, `questions.json`)
+*   **CI/CD / Hosting:** GitHub Actions & GitHub Pages
+*   **Planned Migration:** MongoDB (Cloud Atlas) & Node.js/Express API
+
 ---
 
 ## 👥 The Team Roster
