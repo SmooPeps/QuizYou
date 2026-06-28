@@ -45,10 +45,40 @@
     {
       "subjectId": "Agile",
       "subjectName": "Agile",
-      "students": [
+            "students": [
         {
-          "studentId": null,
-          "studentName": null,
+          "studentId": "saranneh",
+          "studentName": "Saranne",
+          "highestQuizScore": null,
+          "rank": null
+        },
+        {
+          "studentId": "dbacon89",
+          "studentName": "David",
+          "highestQuizScore": null,
+          "rank": null
+        },
+        {
+          "studentId": "smuren",
+          "studentName": "Sophia",
+          "highestQuizScore": null,
+          "rank": null
+        },
+        {
+          "studentId": "chaman11",
+          "studentName": "Amir M",
+          "highestQuizScore": null,
+          "rank": null
+        },
+        {
+          "studentId": "abhikoka",
+          "studentName": "Abhishikth",
+          "highestQuizScore": null,
+          "rank": null
+        },
+        {
+          "studentId": "csmith00",
+          "studentName": "Cole",
           "highestQuizScore": null,
           "rank": null
         }
