@@ -31,15 +31,17 @@ QuizYou is built as a modular client-side application. No heavy compilers, bundl
 ### Local Development / Running the App
 To open the application locally:
 1.  Clone this repository to your machine.
-2.  Open `index.html` directly in your favorite web browser (e.g. double-click the file).
-    *   *Note: Due to browser CORS policies, fetching local JSON files (`students.json` and `questions.json`) is blocked when loaded via the `file://` protocol. The app automatically detects this and falls back to matching in-memory Javascript arrays. Everything will remain fully functional!*
-3.  **For a local server environment (Recommended):**
-    If you have Python installed, you can launch a local server to load the database files dynamically:
+2.  **Launch a Local HTTP Server (Required)**:
+    Since the application uses modular ES6 JavaScript (`import`/`export`), browsers block loading modules over the `file://` protocol due to security (CORS) policies. You **must** run a local web server to preview and run the app locally.
+    
+    If you have Python installed, launch a local server inside the repository folder:
     ```bash
     # Python 3
     python -m http.server 8000
     ```
     Then navigate to `http://localhost:8000` in your browser.
+    
+    *Alternatively, you can use VS Code's "Live Server" extension, Node's `http-server` package, or any similar server.*
 
 ---
 
@@ -49,11 +51,19 @@ QuizYou/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml      # CI/CD deployment configuration for GitHub Pages
+├── src/                    # Modular application source code (ES6 Modules)
+│   ├── api.js              # Handles database loads (students, questions)
+│   ├── auth.js             # Manages student session and authentication state
+│   ├── dashboard.js        # Logic for saving progress and rendering dashboard stats
+│   ├── main.js             # Main coordinator, event listeners entry point
+│   ├── navigation.js       # Handles SPA transitions between screens
+│   ├── quiz.js             # Active exam quiz engine and timer controller
+│   └── state.js            # Shared global state object
 ├── .gitignore              # Files to ignore in git commits
 ├── README.md               # Team project documentation (this file)
 ├── index.html              # Core single-page application structure
 ├── style.css               # Premium CSS layout variables and tokens
-├── app.js                  # Frontend client engine and mock database layer
+├── highscores.json         # Leaderboard database (JSON flat file)
 ├── students.json           # Roster database (JSON flat file)
 └── questions.json          # Exam question bank database (JSON flat file)
 ```

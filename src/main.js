@@ -1,0 +1,96 @@
+// QuizYou Main Orchestrator / Entry Module
+import { appState } from './state.js';
+import { loadData } from './api.js';
+import { restoreSession, handleLogin, handleLogout } from './auth.js';
+import { navigateTo } from './navigation.js';
+import { setupQuiz, renderQuestion, finishQuiz } from './quiz.js';
+import { renderDashboard } from './dashboard.js';
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', async () => {
+  setupEventListeners();
+  await loadData();
+  restoreSession();
+});
+
+// Event Listeners Setup
+function setupEventListeners() {
+  // Brand Header Click
+  document.getElementById('brand-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (appState.currentUser) {
+      navigateTo('config');
+    } else {
+      navigateTo('landing');
+    }
+  });
+
+  // Landing Page Buttons
+  document.getElementById('btn-landing-start').addEventListener('click', () => {
+    navigateTo('auth');
+  });
+
+  document.getElementById('btn-landing-about').addEventListener('click', () => {
+    alert("QuizYou is a software engineering quiz prototype. It allows team members to verify their student credentials, configure module exams, and review score history.");
+  });
+
+  // Authentication Form
+  document.getElementById('btn-auth-back').addEventListener('click', () => {
+    navigateTo('landing');
+  });
+
+  document.getElementById('auth-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inputId = document.getElementById('student-id').value.trim().toLowerCase();
+    const inputPw = document.getElementById('student-pw').value;
+    handleLogin(inputId, inputPw);
+  });
+
+  // Quiz Configuration Form
+  document.getElementById('btn-config-dashboard').addEventListener('click', () => {
+    renderDashboard();
+    navigateTo('dashboard');
+  });
+
+  document.getElementById('config-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    setupQuiz();
+  });
+
+  // Quiz Control Buttons
+  document.getElementById('btn-quiz-prev').addEventListener('click', () => {
+    if (appState.currentQuestionIdx > 0) {
+      appState.currentQuestionIdx--;
+      renderQuestion();
+    }
+  });
+
+  document.getElementById('btn-quiz-next').addEventListener('click', () => {
+    if (appState.currentQuestionIdx < appState.quizQuestions.length - 1) {
+      appState.currentQuestionIdx++;
+      renderQuestion();
+    } else {
+      // Last question - Submit
+      finishQuiz();
+    }
+  });
+
+  // Results Buttons
+  document.getElementById('btn-results-retry').addEventListener('click', () => {
+    navigateTo('config');
+  });
+
+  document.getElementById('btn-results-dashboard').addEventListener('click', () => {
+    renderDashboard();
+    navigateTo('dashboard');
+  });
+
+  // Dashboard Buttons
+  document.getElementById('btn-dash-config').addEventListener('click', () => {
+    navigateTo('config');
+  });
+
+  document.getElementById('btn-dash-logout').addEventListener('click', () => {
+    handleLogout();
+  });
+}
