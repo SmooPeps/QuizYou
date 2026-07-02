@@ -2,12 +2,12 @@
 
 // Fallback local databases if file:// protocol blocks JSON fetches (CORS restrictions)
 const FALLBACK_STUDENTS = [
-  { "id": "dbacon89", "firstName": "David", "lastName": "Bacon", "email": "dbacon89@bu.edu" },
-  { "id": "saranneh", "firstName": "Saranne", "lastName": "Hobbs", "email": "saranneh@bu.edu" },
-  { "id": "smuren", "firstName": "Sophia", "lastName": "Muren", "email": "smuren@bu.edu" },
-  { "id": "chaman11", "firstName": "Amir M", "lastName": "Chaman", "email": "chaman11@bu.edu" },
-  { "id": "abhikoka", "firstName": "Abhishikth", "lastName": "Koka", "email": "abhikoka@bu.edu" },
-  { "id": "csmith00", "firstName": "Cole", "lastName": "Smith", "email": "csmith00@bu.edu" }
+  { "id": "dbacon89", "firstName": "David", "lastName": "Bacon", "email": "dbacon89@bu.edu", "password": "password" },
+  { "id": "saranneh", "firstName": "Saranne", "lastName": "Hobbs", "email": "saranneh@bu.edu", "password": "password" },
+  { "id": "smuren", "firstName": "Sophia", "lastName": "Muren", "email": "smuren@bu.edu", "password": "password" },
+  { "id": "chaman11", "firstName": "Amir M", "lastName": "Chaman", "email": "chaman11@bu.edu", "password": "password" },
+  { "id": "abhikoka", "firstName": "Abhishikth", "lastName": "Koka", "email": "abhikoka@bu.edu", "password": "password" },
+  { "id": "csmith00", "firstName": "Cole", "lastName": "Smith", "email": "csmith00@bu.edu", "password": "password" }
 ];
 
 const FALLBACK_QUESTIONS = [
@@ -192,9 +192,13 @@ function setupEventListeners() {
   document.getElementById('auth-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const inputId = document.getElementById('student-id').value.trim().toLowerCase();
+    const inputPw = document.getElementById('student-pw').value;
     const alertBox = document.getElementById('auth-alert');
-    // Validate student ID
-    const student = appState.students.find(s => s.id.toLowerCase() === inputId || s.email.split('@')[0].toLowerCase() === inputId);
+    // Validate student ID and password
+    const student = appState.students.find(s => 
+      (s.id.toLowerCase() === inputId || s.email.split('@')[0].toLowerCase() === inputId) &&
+      s.password === inputPw
+    );
     
     if (student) {
       alertBox.style.display = 'none';
@@ -205,6 +209,7 @@ function setupEventListeners() {
       updateHeaderStatus(true);
       navigateTo('config');
     } else {
+      alertBox.textContent = "Invalid ID or Password.";
       alertBox.style.display = 'block';
     }
   });
@@ -261,6 +266,7 @@ function setupEventListeners() {
     appState.currentUserid = null;
     updateHeaderStatus(false);
     document.getElementById('student-id').value = '';
+    document.getElementById('student-pw').value = '';
     navigateTo('landing');
   });
 }
