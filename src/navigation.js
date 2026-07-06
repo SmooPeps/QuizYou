@@ -10,14 +10,31 @@ export const screens = {
   leaderboard: document.getElementById('screen-leaderboard'),
 };
 
+let currentScreen = 'landing';
+const history = [];
+
 export function navigateTo(screenKey) {
+  if (screenKey === currentScreen) return;
+
+  history.push(currentScreen);
+  currentScreen = screenKey;
+
   Object.keys(screens).forEach(key => {
     if (screens[key]) {
-      if (key === screenKey) {
-        screens[key].classList.add('active');
-      } else {
-        screens[key].classList.remove('active');
-      }
+      screens[key].classList.toggle('active', key === screenKey);
+    }
+  });
+}
+
+export function goBack() {
+  if (history.length === 0) return;
+
+  const previousScreen = history.pop();
+  currentScreen = previousScreen;
+
+  Object.keys(screens).forEach(key => {
+    if (screens[key]) {
+      screens[key].classList.toggle('active', key === previousScreen);
     }
   });
 }

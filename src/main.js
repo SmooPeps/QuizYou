@@ -5,6 +5,7 @@ import { restoreSession, handleLogin, handleLogout } from './auth.js';
 import { navigateTo } from './navigation.js';
 import { setupQuiz, renderQuestion, finishQuiz } from './quiz.js';
 import { renderDashboard, loadLeaderboards, renderLeaderboards} from './dashboard.js';
+import { goBack } from './navigation.js';
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -116,4 +117,7 @@ document.getElementById('btn-config-leaderboard').addEventListener('click', asyn
   document.getElementById('btn-dash-logout').addEventListener('click', () => {
     handleLogout();
   });
+
+  // Back Button
+  document.getElementById('back-btn').addEventListener('click', goBack);
 }
