@@ -1,6 +1,6 @@
 // QuizYou Authentication Module
 import { appState } from './state.js';
-import { navigateTo } from './navigation.js';
+import { navigateTo, resetNavigationHistory } from './navigation.js';
 
 export function updateHeaderStatus(isLoggedIn) {
   const avatar = document.getElementById('user-status-avatar');
@@ -63,5 +63,6 @@ export function handleLogout() {
   updateHeaderStatus(false);
   document.getElementById('student-id').value = '';
   document.getElementById('student-pw').value = '';
+  resetNavigationHistory();
   navigateTo('landing');
 }

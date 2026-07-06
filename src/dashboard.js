@@ -185,19 +185,30 @@ export function renderLeaderboards(containerId, data) {
   card.innerHTML = `<h2>${subject.subjectName}</h2>`;
 
   students.forEach((student, index) => {
-    const score = student.highestQuizScore ?? 0;
+    const hasScore = student.highestQuizScore !== null && student.highestQuizScore !== undefined;
+    const score = hasScore ? student.highestQuizScore : 0;
 
     let medal = index + 1;
-    if (index === 0) medal = "🥇";
-    else if (index === 1) medal = "🥈";
-    else if (index === 2) medal = "🥉";
+    let highlightClass = "";
+
+    // Only award medals and colored backgrounds if the student has a score
+    if (hasScore) {
+      if (index === 0) {
+        medal = "🥇";
+        highlightClass = "gold";
+      } else if (index === 1) {
+        medal = "🥈";
+        highlightClass = "silver";
+      } else if (index === 2) {
+        medal = "🥉";
+        highlightClass = "bronze";
+      }
+    } else {
+      medal = "-"; // Display dash if no score is logged
+    }
 
     const row = document.createElement("div");
-    row.className = "student";
-
-    if (index === 0) row.classList.add("gold");
-    if (index === 1) row.classList.add("silver");
-    if (index === 2) row.classList.add("bronze");
+    row.className = `student ${highlightClass}`.trim();
 
     row.innerHTML = `
       <div class="rank">${medal}</div>
@@ -205,12 +216,12 @@ export function renderLeaderboards(containerId, data) {
       <div class="name">
         <strong>${student.studentName}</strong>
         <div class="bar">
-          <div class="fill" style="width:${(score / highest) * 100}%"></div>
+          <div class="fill" style="width:${hasScore ? (score / highest) * 100 : 0}%"></div>
         </div>
       </div>
 
       <div class="score">
-        ${student.highestQuizScore ?? "No Score"}
+        ${hasScore ? `${student.highestQuizScore}%` : "No Score"}
       </div>
     `;
 
