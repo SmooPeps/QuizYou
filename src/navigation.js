@@ -9,6 +9,7 @@ export const screens = {
   dashboard: document.getElementById('screen-dashboard'),
   leaderboard: document.getElementById('screen-leaderboard'),
   register: document.getElementById('screen-register'),
+  admin: document.getElementById('screen-admin'),
 };
 
 let currentScreen = 'landing';
@@ -25,6 +26,10 @@ export function navigateTo(screenKey) {
       screens[key].classList.toggle('active', key === screenKey);
     }
   });
+
+  if (screenKey === 'config') {
+    import('./quiz.js').then(m => m.populateCourseAndQuizzes());
+  }
 }
 
 export function goBack() {

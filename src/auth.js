@@ -15,41 +15,49 @@ export function updateHeaderStatus(isLoggedIn) {
   }
 }
 
+const BACKEND_URL = '';
+
 export function restoreSession() {
   const savedUser = localStorage.getItem('quizyou_user');
-  const savedId = localStorage.getItem('quizyou_userid');
-  if (savedUser) {
+  const savedToken = localStorage.getItem('quizyou_jwt');
+  if (savedUser && savedToken) {
     try {
       appState.currentUser = JSON.parse(savedUser);
-      appState.currentUserid = JSON.parse(savedId);
+      appState.currentUserid = appState.currentUser.id;
       updateHeaderStatus(true);
       navigateTo('config');
     } catch (e) {
       localStorage.removeItem('quizyou_user');
-      localStorage.removeItem('quizyou_userid');
+      localStorage.removeItem('quizyou_jwt');
     }
   }
 }
 
-export function handleLogin(inputId, inputPw) {
+export async function handleLogin(inputId, inputPw) {
   const alertBox = document.getElementById('auth-alert');
   
-  const student = appState.students.find(s => 
-    (s.id.toLowerCase() === inputId || s.email.split('@')[0].toLowerCase() === inputId) &&
-    s.password === inputPw
-  );
-  
-  if (student) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: inputId, password: inputPw })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Invalid credentials.');
+
     alertBox.style.display = 'none';
-    appState.currentUser = student;
-    appState.currentUserid = inputId;
-    localStorage.setItem('quizyou_user', JSON.stringify(student));
-    localStorage.setItem('quizyou_userid', JSON.stringify(inputId));
+    appState.currentUser = data.user;
+    appState.currentUserid = data.user.id;
+    
+    localStorage.setItem('quizyou_user', JSON.stringify(data.user));
+    localStorage.setItem('quizyou_jwt', data.token);
+
     updateHeaderStatus(true);
     navigateTo('config');
     return true;
-  } else {
-    alertBox.textContent = "Invalid ID or Password.";
+  } catch (err) {
+    alertBox.textContent = err.message;
     alertBox.style.display = 'block';
     return false;
   }
@@ -57,7 +65,7 @@ export function handleLogin(inputId, inputPw) {
 
 export function handleLogout() {
   localStorage.removeItem('quizyou_user');
-  localStorage.removeItem('quizyou_userid');
+  localStorage.removeItem('quizyou_jwt');
   appState.currentUser = null;
   appState.currentUserid = null;
   updateHeaderStatus(false);

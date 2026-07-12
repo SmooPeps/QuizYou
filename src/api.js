@@ -1,83 +1,83 @@
 import { appState } from './state.js';
 
-export const FALLBACK_STUDENTS = [
-  { "id": "dbacon89", "firstName": "David", "lastName": "Bacon", "email": "dbacon89@bu.edu", "password": "password" },
-  { "id": "saranneh", "firstName": "Saranne", "lastName": "Hobbs", "email": "saranneh@bu.edu", "password": "password" },
-  { "id": "smuren", "firstName": "Sophia", "lastName": "Muren", "email": "smuren@bu.edu", "password": "password" },
-  { "id": "chaman11", "firstName": "Amir M", "lastName": "Chaman", "email": "chaman11@bu.edu", "password": "password" },
-  { "id": "abhikoka", "firstName": "Abhishikth", "lastName": "Koka", "email": "abhikoka@bu.edu", "password": "password" },
-  { "id": "csmith00", "firstName": "Cole", "lastName": "Smith", "email": "csmith00@bu.edu", "password": "password" }
-];
+const BACKEND_URL = '';
 
-export const FALLBACK_QUESTIONS = [
-  {
-    "id": 1,
-    "subject": "Testing",
-    "question": "Which type of testing ensures that new code changes do not break existing functionality?",
-    "options": [
-      "Unit Testing",
-      "Regression Testing",
-      "Integration Testing",
-      "System Testing"
-    ],
-    "correctAnswer": 1
-  },
-  {
-    "id": 2,
-    "subject": "Agile",
-    "question": "What is the primary purpose of a Daily Standup meeting in Scrum?",
-    "options": [
-      "To give detailed status updates to the project manager",
-      "To assign tasks to team members for the day",
-      "To sync team progress, identify blockers, and plan the next 24 hours",
-      "To demonstrate finished features to stakeholders"
-    ],
-    "correctAnswer": 2
-  },
-  {
-    "id": 3,
-    "subject": "Design Patterns",
-    "question": "Which design pattern restricts the instantiation of a class to one single instance?",
-    "options": [
-      "Factory Pattern",
-      "Observer Pattern",
-      "Singleton Pattern",
-      "Strategy Pattern"
-    ],
-    "correctAnswer": 2
-  },
-  {
-    "id": 4,
-    "subject": "Git",
-    "question": "Which Git command updates your local branch with changes from a remote repository and merges them?",
-    "options": [
-      "git fetch",
-      "git pull",
-      "git push",
-      "git checkout"
-    ],
-    "correctAnswer": 1
-  }
-];
+function getHeaders() {
+  const token = localStorage.getItem('quizyou_jwt');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+}
 
 export async function loadData() {
-  // Try loading students.json
-  try {
-    const res = await fetch('students.json');
-    if (!res.ok) throw new Error('Not found');
-    appState.students = await res.json();
-  } catch (err) {
-    console.warn("Using fallback students.json (e.g. running via file:// protocol)");
-    appState.students = FALLBACK_STUDENTS;
-  }
+  // Empty mock placeholder as fetching is now dynamic based on login state
+  console.log("QuizYou APIs connected to backend.");
+}
 
-  // Try loading questions.json
+export async function fetchCourses() {
   try {
-    const res = await fetch('questions.json');
-    if (!res.ok) throw new Error('Not found');
-    appState.allQuestions = await res.json();
+    const res = await fetch(`${BACKEND_URL}/api/courses`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch courses");
+    return await res.json();
   } catch (err) {
-    console.warn("Using fallback questions.json (e.g. running via file:// protocol)");
-    appState.allQuestions = FALLBACK_QUESTIONS;
+    console.error("API Course Fetch Error:", err);
+    return [];
+  }
+}
+
+export async function fetchQuizzesForCourse(courseId) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/courses/${courseId}/quizzes`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch quizzes");
+    return await res.json();
+  } catch (err) {
+    console.error("API Quiz Fetch Error:", err);
+    return [];
+  }
+}
+
+export async function fetchQuizDetails(quizId) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/quizzes/${quizId}`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch quiz details");
+    return await res.json();
+  } catch (err) {
+    console.error("API Quiz Details Fetch Error:", err);
+    return null;
+  }
+}
+
+export async function submitQuizResult(quizId, score, percentage, timeTaken) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/results`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ quizId, score, percentage, timeTaken })
+    });
+    if (!res.ok) throw new Error("Failed to save result");
+    return await res.json();
+  } catch (err) {
+    console.error("API Save Result Error:", err);
+    return null;
+  }
+}
+
+export async function fetchHistory() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/results/history`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch history");
+    return await res.json();
+  } catch (err) {
+    console.error("API History Fetch Error:", err);
+    return [];
   }
 }

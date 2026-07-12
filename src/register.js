@@ -1,7 +1,12 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("registrationForm");
+import { navigateTo } from './navigation.js';
 
-    form.addEventListener("submit", (e) => {
+const BACKEND_URL = '';
+
+function initRegister() {
+    const form = document.getElementById("registrationForm");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const firstName = document.getElementById("firstName").value.trim();
@@ -15,24 +20,28 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Passwords do not match.");
             return;
         }
-        // Here you can add code to save the user data to a database or local storage
-        const user = {
-            firstName,
-            lastName,
-            email,
-            password,
-            role
-        };
 
-        console.log("Registered User:", user);
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName, lastName, email, password, role })
+            });
 
-        alert(
-            `Registration Successful!\n\n` +
-            `Name: ${firstName} ${lastName}\n` +
-            `Email: ${email}\n` +
-            `Role: ${role}`
-        );
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-        form.reset();
+            alert(`Registration Successful!\nWelcome, ${firstName}! Please log in.`);
+            form.reset();
+            navigateTo('auth');
+        } catch (err) {
+            alert(`Registration Error: ${err.message}`);
+        }
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", initRegister);
+} else {
+    initRegister();
+}

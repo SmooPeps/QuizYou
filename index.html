@@ -74,32 +74,20 @@
 
       <section id="screen-config" class="screen">
         <h2 class="config-title">Quiz Configuration</h2>
-        <p class="config-desc">Select your subject and target options to begin the exam.</p>
+        <p class="config-desc">Select your course and active quiz to begin the exam session.</p>
 
         <form id="config-form" onsubmit="return false;">
           <div class="form-group">
-            <label for="config-subject">Subject Module</label>
-            <select id="config-subject" class="form-control">
-              <option value="all">All Subjects</option>
-              <option value="Testing">Testing & QA</option>
-              <option value="Agile">Agile Scrum</option>
-              <option value="Design Patterns">Design Patterns</option>
-              <option value="Git">Version Control (Git)</option>
+            <label for="config-course">Select Course</label>
+            <select id="config-course" class="form-control">
+              <!-- Dynamically populated -->
             </select>
           </div>
 
           <div class="form-group">
-            <label for="config-questions">Number of Questions (5 - 40)</label>
-            <input type="number" id="config-questions" class="form-control" min="5" max="40" value="10">
-          </div>
-
-          <div class="form-group">
-            <label for="config-time">Time Limit</label>
-            <select id="config-time" class="form-control">
-              <option value="5">5 Minutes</option>
-              <option value="10" selected>10 Minutes</option>
-              <option value="20">20 Minutes</option>
-              <option value="30">30 Minutes</option>
+            <label for="config-quiz">Select Quiz</label>
+            <select id="config-quiz" class="form-control">
+              <!-- Dynamically populated -->
             </select>
           </div>
 
@@ -107,6 +95,7 @@
             <button type="submit" class="btn btn-primary" id="btn-config-start">Start Exam</button>
             <button type="button" class="btn btn-secondary" id="btn-config-dashboard">View Dashboard</button>
             <button type="button" class="btn btn-tertiary" id="btn-config-leaderboard">View Leaderboards</button>
+            <button type="button" class="btn btn-secondary" id="btn-config-admin" style="display: none;">Professor Portal</button>
           </div>
         </form>
       </section>
@@ -232,6 +221,41 @@
          
       </section>
 
+      <!-- 9. Professor Portal Screen -->
+      <section id="screen-admin" class="screen">
+        <h2 class="config-title">Professor Portal</h2>
+        <p class="config-desc">Configure quiz parameters and bulk import questions via Excel sheet.</p>
+
+        <form id="admin-upload-form" onsubmit="return false;">
+          <div class="form-group">
+            <label for="admin-config-course">Target Course</label>
+            <select id="admin-config-course" class="form-control" required>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-quiz-title">Quiz Title</label>
+            <input type="text" id="admin-quiz-title" class="form-control" placeholder="e.g. Midterm 1: Design Patterns" required>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-quiz-time">Time Limit (Minutes)</label>
+            <input type="number" id="admin-quiz-time" class="form-control" min="1" max="120" value="10" required>
+          </div>
+
+          <div class="form-group">
+            <label for="excel-file-input">Select Excel File (.xlsx)</label>
+            <input type="file" id="excel-file-input" class="form-control" accept=".xlsx" required>
+          </div>
+
+          <div class="hero-actions" style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" id="btn-admin-upload">Upload & Create Quiz</button>
+            <button type="button" class="btn btn-secondary" id="btn-admin-back">Back</button>
+          </div>
+        </form>
+      </section>
+
       <!-- 8. Registration Screen -->
       <section id="screen-register" class="screen">
         <form id="registrationForm">
@@ -316,6 +340,7 @@
   </footer>
 
   <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/register.js"></script>
 
 </body>
 

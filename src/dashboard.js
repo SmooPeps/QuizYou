@@ -1,45 +1,23 @@
 // QuizYou Dashboard & Highscore/Ranking Module
 import { appState } from './state.js';
+import { fetchHistory } from './api.js';
 
 export function saveExamToHistory(examResult) {
-  if (!appState.currentUser) return;
-  const storageKey = `quizyou_history_${appState.currentUser.id}`;
-  let history = [];
-  
-  const savedHistory = localStorage.getItem(storageKey);
-  if (savedHistory) {
-    try {
-      history = JSON.parse(savedHistory);
-    } catch (e) {
-      history = [];
-    }
-  }
-
-  history.unshift(examResult); // Add to beginning
-  localStorage.setItem(storageKey, JSON.stringify(history));
+  // Keeping signature for backward compatibility
+  console.log("Results are now saved directly in MongoDB");
 }
 
-export function renderDashboard() {
+export async function renderDashboard() {
   if (!appState.currentUser) return;
   
-  const storageKey = `quizyou_history_${appState.currentUser.id}`;
-  let history = [];
-  
-  const savedHistory = localStorage.getItem(storageKey);
-  if (savedHistory) {
-    try {
-      history = JSON.parse(savedHistory);
-    } catch (e) {
-      history = [];
-    }
-  }
+  const history = await fetchHistory();
 
   // Update metrics
   const examsCount = history.length;
   document.getElementById('dash-exams-count').textContent = examsCount;
 
   if (examsCount > 0) {
-    const totalPercentage = history.reduce((sum, item) => sum + item.percentage, 0);
+    const totalPercentage = history.reduce((sum, item) => sum + (item.percentage || 0), 0);
     const avg = Math.round(totalPercentage / examsCount);
     document.getElementById('dash-avg-score').textContent = `${avg}%`;
   } else {
@@ -48,6 +26,7 @@ export function renderDashboard() {
 
   // Update list
   const historyList = document.getElementById('dash-history-list');
+  if (!historyList) return;
   historyList.innerHTML = '';
 
   if (examsCount === 0) {
@@ -59,11 +38,14 @@ export function renderDashboard() {
       const el = document.createElement('div');
       el.className = 'history-item';
       
-      const badgeStyle = item.percentage >= 80 ? 'color: var(--success);' : item.percentage >= 50 ? 'color: var(--warning);' : 'color: var(--error);';
-      
+      const percentage = item.percentage || 0;
+      const badgeStyle = percentage >= 80 ? 'color: var(--success);' : percentage >= 50 ? 'color: var(--warning);' : 'color: var(--error);';
+      const formattedDate = new Date(item.date).toLocaleDateString();
+      const subjectLabel = item.quiz ? `${item.quiz.course ? item.quiz.course.code : ''}: ${item.quiz.title}` : item.subject;
+
       el.innerHTML = `
-        <span>${item.subject} <span class="history-date">(${item.date})</span></span>
-        <span class="history-score" style="${badgeStyle}">${item.score} (${item.percentage}%)</span>
+        <span>${subjectLabel} <span class="history-date">(${formattedDate})</span></span>
+        <span class="history-score" style="${badgeStyle}">${item.score} (${percentage}%)</span>
       `;
       historyList.appendChild(el);
     });

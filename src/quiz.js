@@ -2,51 +2,85 @@
 import { appState } from './state.js';
 import { navigateTo } from './navigation.js';
 import { saveExamToHistory, updateRankings, getStudentRank } from './dashboard.js';
+import { fetchCourses, fetchQuizzesForCourse, fetchQuizDetails, submitQuizResult } from './api.js';
 
 export function getSubjectLabel(sub) {
-  switch (sub) {
-    case 'all': return 'All Subjects';
-    case 'Testing': return 'Testing & QA';
-    case 'Agile': return 'Agile Scrum';
-    case 'Design Patterns': return 'Design Patterns';
-    case 'Git': return 'Version Control (Git)';
-    default: return sub;
+  return sub;
+}
+
+export async function populateCourseAndQuizzes() {
+  const courseDropdown = document.getElementById('config-course');
+  const quizDropdown = document.getElementById('config-quiz');
+  
+  if (!courseDropdown || !quizDropdown) return;
+
+  const courses = await fetchCourses();
+  courseDropdown.innerHTML = '';
+  
+  if (courses.length === 0) {
+    courseDropdown.innerHTML = '<option value="">No courses available</option>';
+    quizDropdown.innerHTML = '<option value="">No quizzes available</option>';
+    return;
+  }
+
+  courses.forEach(c => {
+    courseDropdown.innerHTML += `<option value="${c._id}">${c.code} - ${c.name} (${c.sectionCode})</option>`;
+  });
+
+  // Handle course changes to fetch quizzes dynamically
+  courseDropdown.onchange = async () => {
+    const selectedCourseId = courseDropdown.value;
+    if (!selectedCourseId) return;
+
+    const quizzes = await fetchQuizzesForCourse(selectedCourseId);
+    quizDropdown.innerHTML = '';
+    
+    if (quizzes.length === 0) {
+      quizDropdown.innerHTML = '<option value="">No quizzes available</option>';
+      return;
+    }
+
+    quizzes.forEach(q => {
+      quizDropdown.innerHTML += `<option value="${q._id}">${q.title} (${q.questions.length} Qs)</option>`;
+    });
+  };
+
+  // Trigger initial populate
+  await courseDropdown.onchange();
+
+  // Show Professor Portal button if the user is a professor or admin
+  const adminBtn = document.getElementById('btn-config-admin');
+  if (adminBtn) {
+    const userRole = appState.currentUser ? appState.currentUser.role : 'student';
+    adminBtn.style.display = (userRole === 'professor' || userRole === 'admin') ? 'block' : 'none';
   }
 }
 
-export function setupQuiz() {
-  const subject = document.getElementById('config-subject').value;
-  const numQuestionsInput = parseInt(document.getElementById('config-questions').value);
-  const minutesInput = parseInt(document.getElementById('config-time').value);
+export async function setupQuiz() {
+  const quizDropdown = document.getElementById('config-quiz');
+  const quizId = quizDropdown ? quizDropdown.value : null;
 
-  appState.activeSubject = subject;
-  appState.totalTimeLimit = minutesInput;
-
-  // Filter questions pool by subject
-  let pool = [...appState.allQuestions];
-  if (subject !== 'all') {
-    pool = pool.filter(q => q.subject === subject);
-  }
-
-  // Shuffle pool using Fisher-Yates
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-
-  // Cap quantity
-  const limit = Math.min(numQuestionsInput, pool.length);
-  appState.quizQuestions = pool.slice(0, limit);
-
-  if (appState.quizQuestions.length === 0) {
-    alert("No questions found for the selected subject. Please add questions to questions.json first!");
+  if (!quizId) {
+    alert("Please select a quiz to start!");
     return;
   }
+
+  // Load complete quiz details including questions
+  const quiz = await fetchQuizDetails(quizId);
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+    alert("No questions found for the selected quiz.");
+    return;
+  }
+
+  appState.activeSubject = quiz.title;
+  appState.totalTimeLimit = quiz.timeLimit;
+  appState.quizQuestions = quiz.questions;
+  appState.activeQuizId = quiz._id;
 
   // Reset quiz states
   appState.currentQuestionIdx = 0;
   appState.selectedAnswers = {};
-  appState.timerSecondsLeft = minutesInput * 60;
+  appState.timerSecondsLeft = quiz.timeLimit * 60;
 
   // Render first question
   renderQuestion();
@@ -76,6 +110,8 @@ export function updateTimerUI() {
   const timerText = document.getElementById('quiz-timer-text');
   const timerContainer = document.querySelector('.quiz-timer');
   
+  if (!timerText || !timerContainer) return;
+
   const min = Math.floor(appState.timerSecondsLeft / 60);
   const sec = appState.timerSecondsLeft % 60;
   timerText.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
@@ -175,46 +211,22 @@ export async function finishQuiz() {
   const timeTakenSec = (appState.totalTimeLimit * 60) - appState.timerSecondsLeft;
   const timeTakenMin = Math.floor(timeTakenSec / 60);
   const timeTakenRemainderSec = timeTakenSec % 60;
-
   const timeTakenFormatted = `${String(timeTakenMin).padStart(2, '0')}:${String(timeTakenRemainderSec).padStart(2, '0')}`;
 
-  let rankData = [];
-
-  try {
-    const res = await fetch('highscores.json');
-    if (!res.ok) throw new Error('Not found');
-    rankData = await res.json();
-    appState.students = rankData;
-  } catch (err) {
-    console.warn("Rank Data not found", err);
-  }
-
-  updateRankings(
-    rankData,
-    appState.activeSubject,
-    appState.currentUserid,
-    percentage
-  );
-
-  const masteryRanking = getStudentRank(
-    rankData,
-    appState.activeSubject,
-    appState.currentUserid
+  // Submit result to MongoDB
+  await submitQuizResult(
+    appState.activeQuizId,
+    `${correctCount}/${totalQuestions}`,
+    percentage,
+    timeTakenFormatted
   );
 
   document.getElementById('results-welcome-message').textContent = `Excellent effort, ${appState.currentUser.firstName}! Here is your scorecard:`;
-  document.getElementById('results-subject').textContent = getSubjectLabel(appState.activeSubject);
+  document.getElementById('results-subject').textContent = appState.activeSubject;
   document.getElementById('results-raw').textContent = `${correctCount} / ${totalQuestions}`;
   document.getElementById('results-percent').textContent = `${percentage}%`;
-  document.getElementById('results-rank').textContent = masteryRanking || '--';
+  document.getElementById('results-rank').textContent = '--'; // Calculated dynamically on leaderboard
   document.getElementById('results-time-taken').textContent = timeTakenFormatted;
-
-  saveExamToHistory({
-    subject: getSubjectLabel(appState.activeSubject),
-    score: `${correctCount}/${totalQuestions}`,
-    percentage: percentage,
-    date: new Date().toLocaleDateString()
-  });
 
   navigateTo('results');
 }

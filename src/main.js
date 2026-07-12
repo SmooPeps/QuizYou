@@ -6,13 +6,20 @@ import { navigateTo } from './navigation.js';
 import { setupQuiz, renderQuestion, finishQuiz } from './quiz.js';
 import { renderDashboard, loadLeaderboards, renderLeaderboards} from './dashboard.js';
 import { goBack } from './navigation.js';
+import { populateAdminCourses, setupAdminPanel } from './admin.js';
 
 // Initialize Application
-document.addEventListener('DOMContentLoaded', async () => {
+async function init() {
   setupEventListeners();
   await loadData();
   restoreSession();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 // Event Listeners Setup
 function setupEventListeners() {
@@ -124,4 +131,11 @@ document.getElementById('btn-config-leaderboard').addEventListener('click', asyn
   document.getElementById('register-back-btn').addEventListener('click', goBack);
   document.getElementById('btn-auth-back').addEventListener('click', goBack);
 
+  // Professor Portal Navigation
+  document.getElementById('btn-config-admin').addEventListener('click', async () => {
+    await populateAdminCourses();
+    navigateTo('admin');
+  });
+
+  setupAdminPanel();
 }

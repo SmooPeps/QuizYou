@@ -24,30 +24,40 @@ async function seed() {
     fs.readFileSync(path.join(__dirname, '../../students.json'), 'utf-8')
   );
   const userDocs = [];
+  let profDoc = null;
 
   for (let student of plainStudents) {
     const hashed = await bcrypt.hash(student.password, 10);
+    const role = (student.id === 'abhikoka') ? 'professor' : 'student';
+
     const userDoc = await User.create({
       id: student.id,
       firstName: student.firstName,
       lastName: student.lastName,
       email: student.email,
       password: hashed,
-      role: 'student'
+      role: role
     });
-    userDocs.push(userDoc);
+    
+    if (role === 'professor') {
+      profDoc = userDoc;
+    } else {
+      userDocs.push(userDoc);
+    }
   }
 
-  // Create one Professor (let abhikoka be the professor for testing uploads)
-  const profHashed = await bcrypt.hash('password', 10);
-  const profDoc = await User.create({
-    id: 'abhikoka',
-    firstName: 'Abhishikth',
-    lastName: 'Koka',
-    email: 'abhikoka@bu.edu',
-    password: profHashed,
-    role: 'professor'
-  });
+  // Fallback if abhikoka is missing from JSON
+  if (!profDoc) {
+    const profHashed = await bcrypt.hash('password', 10);
+    profDoc = await User.create({
+      id: 'abhikoka',
+      firstName: 'Abhishikth',
+      lastName: 'Koka',
+      email: 'abhikoka@bu.edu',
+      password: profHashed,
+      role: 'professor'
+    });
+  }
 
   console.log("Users Seeded successfully.");
 

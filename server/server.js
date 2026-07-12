@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const xlsx = require('xlsx');
+const path = require('path');
 
 const User = require('./models/User');
 const Course = require('./models/Course');
@@ -16,6 +17,9 @@ const ExamResult = require('./models/ExamResult');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files to bypass file:// CORS issues
+app.use(express.static(path.join(__dirname, '../')));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -37,6 +41,32 @@ function authenticate(req, res, next) {
     res.status(403).json({ error: "Invalid Session Token." });
   }
 }
+
+// 0. JWT User Registration
+app.post('/api/auth/register', async (req, res) => {
+  const { firstName, lastName, email, password, role } = req.body;
+  try {
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) return res.status(400).json({ error: "Email already registered." });
+
+    const idPrefix = email.split('@')[0].toLowerCase();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      id: idPrefix,
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role: (role || 'student').toLowerCase()
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: "Registration successful", userId: newUser.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // 1. JWT User Login
 app.post('/api/auth/login', async (req, res) => {
@@ -218,4 +248,5 @@ app.post(
   }
 );
 
-app.listen(5001, () => console.log("Server online on 5001"));
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`Server online on port ${PORT}`));
