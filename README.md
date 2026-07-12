@@ -57,12 +57,16 @@ To run the full-stack application locally:
 ## 📂 Repository Structure
 ```
 QuizYou/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml      # CI/CD deployment configuration for GitHub Pages
-├── src/                    # Modular application source code (ES6 Modules)
-│   ├── api.js              # Handles database loads (students, questions)
-│   ├── auth.js             # Manages student session and authentication state
+├── server/                 # Express backend API & Database models
+│   ├── models/             # Mongoose schemas (User, Course, Quiz, ExamResult)
+│   ├── scripts/            # Admin scripts (e.g., DB seeders)
+│   ├── .env                # Environment variables (DB URI, JWT secret)
+│   ├── package.json        # Node.js backend dependencies
+│   └── server.js           # Express API server entry point & static file hosting
+├── src/                    # Frontend client logic (ES6 Modules)
+│   ├── admin.js            # Professor portal Excel upload logic
+│   ├── api.js              # Fetch requests to Express backend API
+│   ├── auth.js             # JWT session state management
 │   ├── dashboard.js        # Logic for saving progress and rendering dashboard stats
 │   ├── main.js             # Main coordinator, event listeners entry point
 │   ├── navigation.js       # Handles SPA transitions between screens
@@ -71,10 +75,7 @@ QuizYou/
 ├── .gitignore              # Files to ignore in git commits
 ├── README.md               # Team project documentation (this file)
 ├── index.html              # Core single-page application structure
-├── style.css               # Premium CSS layout variables and tokens
-├── highscores.json         # Leaderboard database (JSON flat file)
-├── students.json           # Roster database (JSON flat file)
-└── questions.json          # Exam question bank database (JSON flat file)
+└── style.css               # Premium CSS layout variables and tokens
 ```
 
 ---
