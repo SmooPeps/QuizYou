@@ -25,8 +25,7 @@ function initRegister() {
             const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                //email will also be the user id, so we can use it for both fields
-                body: JSON.stringify({email, firstName, lastName, email, password, role })
+                body: JSON.stringify({firstName, lastName, email, password, role })
             });
 
             const data = await res.json();
