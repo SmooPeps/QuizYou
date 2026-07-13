@@ -6,7 +6,7 @@ const BACKEND_URL = '';
 export async function populateAdminCourses() {
   const adminCourseDropdown = document.getElementById('admin-config-course');
   if (!adminCourseDropdown) return;
-
+ console.log("Courses seeded!");
   const courses = await fetchCourses();
   adminCourseDropdown.innerHTML = '';
 
