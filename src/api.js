@@ -30,27 +30,47 @@ function getHeaders() {
 //Dummy data for testing without backend. Remove this when backend is ready.
 export async function fetchCourses() {
   return [
-    {
-      id: 1,
-      title: "Introduction to JavaScript",
-      description: "Learn JavaScript fundamentals.",
-      instructor: "Sarah Williams",
-      category: "Programming",
-      level: "Beginner",
-      duration: "8 weeks",
-      price: 49.99
-    },
-    {
-      id: 2,
-      title: "React Development Bootcamp",
-      description: "Build modern React applications.",
-      instructor: "Michael Brown",
-      category: "Web Development",
-      level: "Intermediate",
-      duration: "10 weeks",
-      price: 79.99
-    }
-  ];
+  {
+    code: "CS591",
+    name: "Software Engineering",
+    description: "Covers software development methodologies, design patterns, testing strategies, and best practices for building reliable software systems."
+  },
+  {
+    code: "CS501",
+    name: "Advanced Programming",
+    description: "Explores advanced programming concepts including object-oriented design, algorithms, data structures, and code optimization."
+  },
+  {
+    code: "CS520",
+    name: "Database Systems",
+    description: "Introduces relational and NoSQL databases, data modeling, indexing, query optimization, and database management techniques."
+  },
+  {
+    code: "CS550",
+    name: "Computer Networks",
+    description: "Study of networking fundamentals including protocols, network architectures, routing, security, and distributed communication."
+  },
+  {
+    code: "CS560",
+    name: "Artificial Intelligence",
+    description: "Introduction to AI concepts including machine learning, search algorithms, knowledge representation, and intelligent systems."
+  },
+  {
+    code: "CS580",
+    name: "Web Application Development",
+    description: "Focuses on modern web development using frontend frameworks, backend services, APIs, authentication, and deployment."
+  },
+  {
+    code: "CS610",
+    name: "Cloud Computing",
+    description: "Examines cloud platforms, virtualization, distributed systems, cloud architecture, and scalable application deployment."
+  },
+  {
+    code: "CS620",
+    name: "Cybersecurity Fundamentals",
+    description: "Covers security principles, cryptography, vulnerability analysis, secure programming, and threat mitigation."
+  }
+]
 }
 
 export async function fetchQuizzesForCourse(courseId) {
