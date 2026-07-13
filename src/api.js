@@ -10,22 +10,67 @@ function getHeaders() {
   };
 }
 
-export async function loadData() {
-  // Empty mock placeholder as fetching is now dynamic based on login state
-  console.log("QuizYou APIs connected to backend.");
-}
+// export async function loadData() {
+//   // Empty mock placeholder as fetching is now dynamic based on login state
+//   console.log("QuizYou APIs connected to backend.");
+// }
 
+// export async function fetchCourses() {
+//   try {
+//     const res = await fetch(`${BACKEND_URL}/api/courses`, {
+//       headers: getHeaders()
+//     });
+//     if (!res.ok) throw new Error("Failed to fetch courses");
+//     return await res.json();
+//   } catch (err) {
+//     console.error("API Course Fetch Error:", err);
+//     return [];
+//   }
+// }
+//Dummy data for testing without backend. Remove this when backend is ready.
 export async function fetchCourses() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/courses`, {
-      headers: getHeaders()
-    });
-    if (!res.ok) throw new Error("Failed to fetch courses");
-    return await res.json();
-  } catch (err) {
-    console.error("API Course Fetch Error:", err);
-    return [];
+  return [
+  {
+    code: "CS591",
+    name: "Software Engineering",
+    description: "Covers software development methodologies, design patterns, testing strategies, and best practices for building reliable software systems."
+  },
+  {
+    code: "CS501",
+    name: "Advanced Programming",
+    description: "Explores advanced programming concepts including object-oriented design, algorithms, data structures, and code optimization."
+  },
+  {
+    code: "CS520",
+    name: "Database Systems",
+    description: "Introduces relational and NoSQL databases, data modeling, indexing, query optimization, and database management techniques."
+  },
+  {
+    code: "CS550",
+    name: "Computer Networks",
+    description: "Study of networking fundamentals including protocols, network architectures, routing, security, and distributed communication."
+  },
+  {
+    code: "CS560",
+    name: "Artificial Intelligence",
+    description: "Introduction to AI concepts including machine learning, search algorithms, knowledge representation, and intelligent systems."
+  },
+  {
+    code: "CS580",
+    name: "Web Application Development",
+    description: "Focuses on modern web development using frontend frameworks, backend services, APIs, authentication, and deployment."
+  },
+  {
+    code: "CS610",
+    name: "Cloud Computing",
+    description: "Examines cloud platforms, virtualization, distributed systems, cloud architecture, and scalable application deployment."
+  },
+  {
+    code: "CS620",
+    name: "Cybersecurity Fundamentals",
+    description: "Covers security principles, cryptography, vulnerability analysis, secure programming, and threat mitigation."
   }
+]
 }
 
 export async function fetchQuizzesForCourse(courseId) {
