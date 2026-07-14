@@ -102,21 +102,29 @@ app.post('/api/auth/login', async (req, res) => {
 // 2. Fetch User's Courses
 app.get('/api/courses', authenticate, async (req, res) => {
   try {
-    let sections;
-    if (req.user.role === 'professor') {
-      sections = await Section.find({ professor: req.user._id }).populate('course');
-    } else {
-      sections = await Section.find({ students: req.user._id }).populate('course');
+    if (req.user.role === 'professor' || req.user.role === 'admin') {
+      const allCourses = await Course.find();
+      const mapped = allCourses.map(c => ({
+        _id: c._id,
+        code: c.code,
+        name: c.name,
+        sectionCode: 'All Sections'
+      }));
+      return res.json(mapped);
     }
 
+    const sections = await Section.find({ students: req.user._id }).populate('course');
+    
     // Map list to clean array of courses
-    const courses = sections.map(s => ({
-      _id: s.course._id,
-      code: s.course.code,
-      name: s.course.name,
-      sectionCode: s.sectionCode,
-      semester: s.semester
-    }));
+    const courses = sections
+      .filter(s => s.course != null)
+      .map(s => ({
+        _id: s.course._id,
+        code: s.course.code,
+        name: s.course.name,
+        sectionCode: s.sectionCode,
+        semester: s.semester
+      }));
 
     res.json(courses);
   } catch (err) {
