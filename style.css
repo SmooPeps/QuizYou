@@ -718,3 +718,33 @@ select.form-control option {
     width: 100%;
   }
 }
+
+/* Header Dropdown */
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.5rem;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 150px;
+  display: none;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.dropdown-menu.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}

@@ -8,11 +8,13 @@ import { renderDashboard, loadLeaderboards, renderLeaderboards} from './dashboar
 import { goBack } from './navigation.js';
 import { populateAdminCourses, setupAdminPanel } from './admin.js';
 import { initAdminManagement, setupAdminManagementHandlers } from './admin_management.js';
+import { initProfessorPortal } from './professor_portal.js';
 
 // Initialize Application
 async function init() {
   setupEventListeners();
   setupAdminManagementHandlers();
+  initProfessorPortal();
  // await loadData();
   restoreSession();
 }
@@ -125,6 +127,30 @@ document.getElementById('btn-config-leaderboard').addEventListener('click', asyn
   });
 
   document.getElementById('btn-dash-logout').addEventListener('click', () => {
+    handleLogout();
+  });
+
+  // Header User Dropdown
+  const userBadgeToggle = document.getElementById('user-badge-toggle');
+  const userDropdownMenu = document.getElementById('user-dropdown-menu');
+  const headerLogoutBtn = document.getElementById('header-logout-btn');
+
+  userBadgeToggle.addEventListener('click', (e) => {
+    if (appState.currentUser) {
+      e.stopPropagation();
+      userDropdownMenu.classList.toggle('show');
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    if (userDropdownMenu.classList.contains('show')) {
+      userDropdownMenu.classList.remove('show');
+    }
+  });
+
+  headerLogoutBtn.addEventListener('click', () => {
+    userDropdownMenu.classList.remove('show');
     handleLogout();
   });
 

@@ -61,7 +61,7 @@ app.post('/api/auth/register', async (req, res) => {
       lastName,
       email: email.toLowerCase(),
       password: hashedPassword,
-      role: (role || 'student').toLowerCase()
+      role: 'student' // Public registration is strictly for students
     });
 
     await newUser.save();
@@ -135,10 +135,31 @@ app.get('/api/courses', authenticate, async (req, res) => {
   }
 });
 
+// 2b. Fetch Sections for a specific Course
+app.get('/api/courses/:courseId/sections', authenticate, async (req, res) => {
+  try {
+    const sections = await Section.find({ course: req.params.courseId });
+    res.json(sections);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 3. Fetch Quizzes for a specific Course
 app.get('/api/courses/:courseId/quizzes', authenticate, async (req, res) => {
   try {
-    const quizzes = await Quiz.find({ course: req.params.courseId })
+    const query = { course: req.params.courseId };
+    
+    // Students only see visible quizzes that target their sections.
+    if (req.user.role === 'student') {
+      query.isVisible = true;
+      const enrolledSections = await Section.find({ course: req.params.courseId, students: req.user._id });
+      const enrolledSectionIds = enrolledSections.map(s => s._id);
+      // Only return quizzes where at least one of the student's enrolled sections is in visibleToSections
+      query.visibleToSections = { $in: enrolledSectionIds };
+    }
+
+    const quizzes = await Quiz.find(query)
       .select('-questions.correctAnswer');
 
     // We omit the correctAnswer indices from being visible to students on initial load for security.
@@ -151,7 +172,7 @@ app.get('/api/courses/:courseId/quizzes', authenticate, async (req, res) => {
 // 4. Fetch specific quiz details (For students taking it)
 app.get('/api/quizzes/:quizId', authenticate, async (req, res) => {
   try {
-    const quiz = await Quiz.findById(req.params.quizId);
+    const quiz = await Quiz.findById(req.params.quizId).populate('course');
     res.json(quiz);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -160,14 +181,15 @@ app.get('/api/quizzes/:quizId', authenticate, async (req, res) => {
 
 // 5. Submit Quiz Score
 app.post('/api/results', authenticate, async (req, res) => {
-  const { quizId, score, percentage, timeTaken } = req.body;
+  const { quizId, score, percentage, timeTaken, answers } = req.body;
   try {
     const result = new ExamResult({
       student: req.user._id,
       quiz: quizId,
       score,
       percentage,
-      timeTaken
+      timeTaken,
+      answers: answers || []
     });
 
     await result.save();
@@ -213,8 +235,21 @@ app.post(
 
       const questionsToInsert = [];
 
-      const quizTitle = req.query.title || 'Excel Uploaded Quiz';
-      const timeLimit = parseInt(req.query.timeLimit) || 10;
+      const quizTitle = req.body.title || req.query.title || 'Excel Uploaded Quiz';
+      const timeLimit = parseInt(req.body.timeLimit || req.query.timeLimit) || 10;
+      
+      let visibleToSections = [];
+      if (req.body.visibleToSections) {
+        try {
+          visibleToSections = JSON.parse(req.body.visibleToSections);
+        } catch(e) {
+          if (Array.isArray(req.body.visibleToSections)) {
+            visibleToSections = req.body.visibleToSections;
+          } else {
+             visibleToSections = [req.body.visibleToSections];
+          }
+        }
+      }
 
       for (const row of rows) {
         const questionText = String(row['Question'] || '').trim();
@@ -229,27 +264,13 @@ app.post(
           type
         };
 
-        if (type === 'true_false') {
-          question.options = ['True', 'False'];
-
-          const answer = String(row['Correct Answer'] || '')
-            .trim()
-            .toUpperCase();
-
-          if (answer === 'TRUE') {
-            question.correctAnswer = 0;
-          } else if (answer === 'FALSE') {
-            question.correctAnswer = 1;
-          } else {
-            continue; // Invalid true/false answer
-          }
-        }
-        else {
+        if (type === 'multiple_choice' || type === 'multi_select') {
           const options = [
             row['Option A'],
             row['Option B'],
             row['Option C'],
-            row['Option D']
+            row['Option D'],
+            row['Option E']
           ]
             .filter(value => value !== undefined && value !== null && value !== '')
             .map(value => String(value).trim());
@@ -291,6 +312,24 @@ app.post(
             continue; // Unknown question type
           }
         }
+        else if (type === 'true_false') {
+          question.options = ['True', 'False'];
+
+          const answer = String(row['Correct Answer'] || '')
+            .trim()
+            .toUpperCase();
+
+          if (answer === 'TRUE') {
+            question.correctAnswer = 0;
+          } else if (answer === 'FALSE') {
+            question.correctAnswer = 1;
+          } else {
+            continue; // Invalid true/false answer
+          }
+        }
+        else {
+          continue; // Unknown question type
+        }
 
         questionsToInsert.push(question);
       }
@@ -305,6 +344,7 @@ app.post(
         title: quizTitle,
         course: req.params.courseId,
         timeLimit,
+        visibleToSections,
         questions: questionsToInsert,
         createdBy: req.user._id
       });
@@ -319,6 +359,90 @@ app.post(
     }
   }
 );
+// --- PROFESSOR PORTAL ENDPOINTS ---
+
+const requireProfessor = (req, res, next) => {
+  if (req.user.role !== 'professor' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Professor access required.' });
+  }
+  next();
+};
+
+// Prof A: Create Quiz (Manual)
+app.post('/api/quizzes', authenticate, requireProfessor, async (req, res) => {
+  try {
+    const quiz = new Quiz({
+      ...req.body,
+      createdBy: req.user._id
+    });
+    await quiz.save();
+    res.status(201).json(quiz);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Prof A: Update Quiz (Modify questions or toggle visibility)
+app.put('/api/quizzes/:id', authenticate, requireProfessor, async (req, res) => {
+  try {
+    const quiz = await Quiz.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
+    res.json(quiz);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Prof B: Update Course Settings (Leaderboard, Timer)
+app.put('/api/courses/:id/settings', authenticate, requireProfessor, async (req, res) => {
+  const { isLeaderboardEnabled, isTimerEnabled } = req.body;
+  try {
+    const course = await Course.findByIdAndUpdate(
+      req.params.id,
+      { isLeaderboardEnabled, isTimerEnabled },
+      { new: true }
+    );
+    if (!course) return res.status(404).json({ error: 'Course not found' });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Prof C: Course Analytics
+app.get('/api/analytics/course/:courseId', authenticate, requireProfessor, async (req, res) => {
+  try {
+    const courseId = new mongoose.Types.ObjectId(req.params.courseId);
+    
+    // Find all quizzes in this course
+    const quizzes = await Quiz.find({ course: courseId });
+    const quizIds = quizzes.map(q => q._id);
+
+    // Aggregate Exam Results for these quizzes
+    const stats = await ExamResult.aggregate([
+      { $match: { quiz: { $in: quizIds } } },
+      { $unwind: "$answers" },
+      { 
+        $group: {
+          _id: "$answers.questionId",
+          correctCount: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
+          totalAttempts: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          questionId: "$_id",
+          successRate: { $divide: ["$correctCount", "$totalAttempts"] }
+        }
+      }
+    ]);
+
+    res.json({ quizzes, stats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- ADMIN MANAGEMENT ENDPOINTS ---
 
 const requireAdmin = (req, res, next) => {

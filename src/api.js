@@ -96,12 +96,12 @@ export async function fetchQuizDetails(quizId) {
   }
 }
 
-export async function submitQuizResult(quizId, score, percentage, timeTaken) {
+export async function submitQuizResult(quizId, score, percentage, timeTaken, answers = []) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/results`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ quizId, score, percentage, timeTaken })
+      body: JSON.stringify({ quizId, score, percentage, timeTaken, answers })
     });
     if (!res.ok) throw new Error("Failed to save result");
     return await res.json();

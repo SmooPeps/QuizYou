@@ -5,6 +5,10 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  topic: {
+    type: String,
+    default: 'General'
+  },
 
   type: {
     type: String,
@@ -69,6 +73,16 @@ const quizSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+
+  isVisible: {
+    type: Boolean,
+    default: false
+  },
+
+  visibleToSections: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Section'
+  }],
 
   createdAt: {
     type: Date,

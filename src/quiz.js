@@ -106,6 +106,8 @@ export async function setupQuiz() {
     }
   });
 
+  appState.isTimerEnabled = quiz.course?.isTimerEnabled ?? true;
+  appState.isLeaderboardEnabled = quiz.course?.isLeaderboardEnabled ?? true;
   appState.timerSecondsLeft = quiz.timeLimit * 60;
 
   // Render the first question
@@ -114,8 +116,13 @@ export async function setupQuiz() {
   // Navigate to the quiz screen
   navigateTo('quiz');
 
-  // Start the countdown timer
-  startTimer();
+  // Start the countdown timer if enabled
+  if (appState.isTimerEnabled) {
+    document.querySelector('.quiz-timer').style.display = 'block';
+    startTimer();
+  } else {
+    document.querySelector('.quiz-timer').style.display = 'none';
+  }
 }
 
 export function startTimer() {
@@ -258,48 +265,56 @@ export async function finishQuiz() {
   let correctCount = 0;
   const totalQuestions = appState.quizQuestions.length;
 
+  const answersPayload = [];
+
   appState.quizQuestions.forEach((q, idx) => {
+    const answer = appState.selectedAnswers[idx];
+    let isCorrect = false;
 
-  const answer = appState.selectedAnswers[idx];
-
-  if (q.type === 'multi_select') {
-
-    const student = Array.isArray(answer)
-      ? [...answer].sort((a,b)=>a-b)
-      : [];
-
-    const correct = [...q.correctAnswers].sort((a,b)=>a-b);
-
-    if (
-      student.length === correct.length &&
-      student.every((v,i)=>v===correct[i])
-    ) {
-      correctCount++;
+    if (q.type === 'multi_select') {
+      const student = Array.isArray(answer)
+        ? [...answer].sort((a,b)=>a-b)
+        : [];
+      const correct = [...q.correctAnswers].sort((a,b)=>a-b);
+      
+      if (
+        student.length === correct.length &&
+        student.every((v,i)=>v===correct[i])
+      ) {
+        correctCount++;
+        isCorrect = true;
+      }
+    } else {
+      if (answer === q.correctAnswer) {
+        correctCount++;
+        isCorrect = true;
+      }
     }
 
-  } else {
-
-    if (answer === q.correctAnswer) {
-      correctCount++;
-    }
-
-  }
-
-});
+    answersPayload.push({
+      questionId: q._id,
+      selectedOptions: Array.isArray(answer) ? answer : (answer !== null ? [answer] : []),
+      isCorrect
+    });
+  });
 
   const percentage = Math.round((correctCount / totalQuestions) * 100);
 
-  const timeTakenSec = (appState.totalTimeLimit * 60) - appState.timerSecondsLeft;
-  const timeTakenMin = Math.floor(timeTakenSec / 60);
-  const timeTakenRemainderSec = timeTakenSec % 60;
-  const timeTakenFormatted = `${String(timeTakenMin).padStart(2, '0')}:${String(timeTakenRemainderSec).padStart(2, '0')}`;
+  let timeTakenFormatted = 'N/A';
+  if (appState.isTimerEnabled) {
+    const timeTakenSec = (appState.totalTimeLimit * 60) - appState.timerSecondsLeft;
+    const timeTakenMin = Math.floor(timeTakenSec / 60);
+    const timeTakenRemainderSec = timeTakenSec % 60;
+    timeTakenFormatted = `${String(timeTakenMin).padStart(2, '0')}:${String(timeTakenRemainderSec).padStart(2, '0')}`;
+  }
 
   // Submit result to MongoDB
   await submitQuizResult(
     appState.activeQuizId,
     `${correctCount}/${totalQuestions}`,
     percentage,
-    timeTakenFormatted
+    timeTakenFormatted,
+    answersPayload
   );
 
   document.getElementById('results-welcome-message').textContent = `Excellent effort, ${appState.currentUser.firstName}! Here is your scorecard:`;

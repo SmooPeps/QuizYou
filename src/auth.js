@@ -5,13 +5,16 @@ import { navigateTo, resetNavigationHistory } from './navigation.js';
 export function updateHeaderStatus(isLoggedIn) {
   const avatar = document.getElementById('user-status-avatar');
   const statusText = document.getElementById('user-status-text');
+  const dropdownIcon = document.getElementById('user-dropdown-icon');
   
   if (isLoggedIn && appState.currentUser) {
     avatar.classList.add('logged-in');
     statusText.textContent = `${appState.currentUser.firstName} ${appState.currentUser.lastName}`;
+    if (dropdownIcon) dropdownIcon.style.display = 'inline';
   } else {
     avatar.classList.remove('logged-in');
     statusText.textContent = 'Guest Mode';
+    if (dropdownIcon) dropdownIcon.style.display = 'none';
   }
 }
 

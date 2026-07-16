@@ -42,13 +42,18 @@ export function setupAdminPanel() {
       return;
     }
 
+    const targetSections = Array.from(document.querySelectorAll('input[name="targetSections"]:checked')).map(cb => cb.value);
+
     const formData = new FormData();
     formData.append('excelFile', fileInput.files[0]);
+    formData.append('title', title);
+    formData.append('timeLimit', timeLimit);
+    formData.append('visibleToSections', JSON.stringify(targetSections));
 
     const token = localStorage.getItem('quizyou_jwt');
 
     try {
-      const url = `${BACKEND_URL}/api/admin/courses/${courseId}/quizzes/upload-excel?title=${encodeURIComponent(title)}&timeLimit=${timeLimit}`;
+      const url = `${BACKEND_URL}/api/admin/courses/${courseId}/quizzes/upload-excel`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
