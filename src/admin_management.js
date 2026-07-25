@@ -166,6 +166,17 @@ function populateRosterDropdowns(courses, users, sections) {
     }
   });
 
+  // Auto-check enrolled students when a section is selected
+  sectionDropdown.addEventListener('change', (e) => {
+    const selectedId = e.target.value;
+    const selectedSection = sections.find(s => s._id === selectedId);
+    const enrolledIds = selectedSection && selectedSection.students ? selectedSection.students.map(st => st._id) : [];
+    
+    document.querySelectorAll('.student-checkbox').forEach(cb => {
+      cb.checked = enrolledIds.includes(cb.value);
+    });
+  });
+
   // Students Checkboxes
   studentCheckboxesContainer.innerHTML = '';
   const students = users.filter(u => u.role === 'student');
