@@ -150,9 +150,8 @@ app.get('/api/courses/:courseId/quizzes', authenticate, async (req, res) => {
   try {
     const query = { course: req.params.courseId };
     
-    // Students only see visible quizzes that target their sections.
+    // Students only see quizzes that target their sections.
     if (req.user.role === 'student') {
-      query.isVisible = true;
       const enrolledSections = await Section.find({ course: req.params.courseId, students: req.user._id });
       const enrolledSectionIds = enrolledSections.map(s => s._id);
       // Only return quizzes where at least one of the student's enrolled sections is in visibleToSections
@@ -388,6 +387,17 @@ app.put('/api/quizzes/:id', authenticate, requireProfessor, async (req, res) => 
     const quiz = await Quiz.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
     res.json(quiz);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Prof A: Delete Quiz
+app.delete('/api/quizzes/:id', authenticate, requireProfessor, async (req, res) => {
+  try {
+    const quiz = await Quiz.findByIdAndDelete(req.params.id);
+    if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
+    res.json({ message: "Quiz deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
