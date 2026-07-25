@@ -485,6 +485,29 @@ app.post('/api/admin/users', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
+  const { id, firstName, lastName, email, password, role } = req.body;
+  try {
+    const updateData = {};
+    if (id) updateData.id = id.toLowerCase();
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email.toLowerCase();
+    if (role) updateData.role = role.toLowerCase();
+    
+    if (password && password.trim() !== '') {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+    
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!updatedUser) return res.status(404).json({ error: "User not found." });
+    
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);

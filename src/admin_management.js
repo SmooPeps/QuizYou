@@ -97,7 +97,12 @@ function renderUsersList(users) {
     
     div.innerHTML = `
       <span><strong>${u.id}</strong> (${u.role}): ${u.firstName} ${u.lastName} - ${u.email}</span>
-      ${u.id !== appState.currentUser.id ? `<button class="btn btn-tertiary btn-delete-user" data-id="${u._id}" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ff6b6b; border-color: #ff6b6b;">Delete</button>` : ''}
+      ${u.id !== appState.currentUser.id ? `
+        <div>
+          <button class="btn btn-secondary btn-edit-user" data-user='${JSON.stringify(u).replace(/'/g, "&#39;")}' style="padding: 0.2rem 0.5rem; font-size: 0.8rem; margin-right: 0.5rem;">Edit</button>
+          <button class="btn btn-tertiary btn-delete-user" data-id="${u._id}" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ff6b6b; border-color: #ff6b6b;">Delete</button>
+        </div>
+      ` : ''}
     `;
     list.appendChild(div);
   });
@@ -107,6 +112,27 @@ function renderUsersList(users) {
       if (confirm('Are you sure you want to delete this user?')) {
         await deleteUser(e.target.getAttribute('data-id'));
       }
+    });
+  });
+
+  document.querySelectorAll('.btn-edit-user').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const u = JSON.parse(e.target.getAttribute('data-user'));
+      document.getElementById('add-user-id').value = u.id;
+      document.getElementById('add-user-firstname').value = u.firstName;
+      document.getElementById('add-user-lastname').value = u.lastName;
+      document.getElementById('add-user-email').value = u.email;
+      document.getElementById('add-user-password').value = '';
+      document.getElementById('add-user-role').value = u.role;
+      
+      const form = document.getElementById('admin-user-form');
+      form.dataset.editId = u._id;
+      
+      document.getElementById('admin-user-form-title').textContent = 'Edit User';
+      document.getElementById('admin-user-submit-btn').textContent = 'Update User';
+      document.getElementById('admin-user-cancel-btn').style.display = 'inline-block';
+      
+      form.scrollIntoView({ behavior: 'smooth' });
     });
   });
 }
@@ -228,6 +254,16 @@ export function setupAdminManagementHandlers() {
     }
   });
 
+  // User Form Cancel Button
+  document.getElementById('admin-user-cancel-btn').addEventListener('click', () => {
+    const form = document.getElementById('admin-user-form');
+    form.reset();
+    delete form.dataset.editId;
+    document.getElementById('admin-user-form-title').textContent = 'Create User';
+    document.getElementById('admin-user-submit-btn').textContent = 'Create User';
+    document.getElementById('admin-user-cancel-btn').style.display = 'none';
+  });
+
   // User Form
   document.getElementById('admin-user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -240,15 +276,31 @@ export function setupAdminManagementHandlers() {
       role: document.getElementById('add-user-role').value
     };
     
-    const res = await fetch(`${BACKEND_URL}/api/admin/users`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(payload)
-    });
+    const form = document.getElementById('admin-user-form');
+    const editId = form.dataset.editId;
+    
+    let res;
+    if (editId) {
+      res = await fetch(`${BACKEND_URL}/api/users/${editId}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await fetch(`${BACKEND_URL}/api/admin/users`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(payload)
+      });
+    }
     
     if (res.ok) {
-      alert("User created successfully!");
-      document.getElementById('admin-user-form').reset();
+      alert(editId ? "User updated successfully!" : "User created successfully!");
+      form.reset();
+      delete form.dataset.editId;
+      document.getElementById('admin-user-form-title').textContent = 'Create User';
+      document.getElementById('admin-user-submit-btn').textContent = 'Create User';
+      document.getElementById('admin-user-cancel-btn').style.display = 'none';
       initAdminManagement();
     } else {
       const err = await res.json();
