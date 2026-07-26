@@ -8,7 +8,7 @@ import { renderDashboard, loadLeaderboards, renderLeaderboards} from './dashboar
 import { goBack } from './navigation.js';
 import { setupAdminPanel } from './admin.js';
 import { initAdminManagement, setupAdminManagementHandlers } from './admin_management.js';
-import { initProfessorPortal, fetchProfessorData } from './professor_portal.js';
+import { initProfessorPortal, fetchProfessorData } from './professor_portal.js?v=3';
 
 // Initialize Application
 async function init() {
