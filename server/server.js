@@ -218,49 +218,62 @@ app.get('/api/results/history', authenticate, async (req, res) => {
   }
 });
 
-// 6.5 Get Leaderboards grouped by Course
+// 6.5 Get Leaderboards grouped by Quiz for the current user's sections
 app.get('/api/leaderboard', authenticate, async (req, res) => {
   try {
-    const results = await ExamResult.find()
-      .populate('student')
-      .populate({
-        path: 'quiz',
-        populate: { path: 'course' }
-      });
-      
-    const courseMap = {};
+    // 1. Find all sections the current user is enrolled in
+    const sections = await Section.find({ students: req.user._id }).populate('course').populate('students');
     
-    for (const r of results) {
-      if (!r.quiz || !r.quiz.course || !r.quiz.course.isLeaderboardEnabled) {
-        continue;
-      }
+    const quizMap = {}; 
+
+    for (const section of sections) {
+      if (!section.course.isLeaderboardEnabled) continue;
       
-      const cId = r.quiz.course._id.toString();
-      if (!courseMap[cId]) {
-        courseMap[cId] = {
-          subjectName: r.quiz.course.name,
-          studentsMap: {}
-        };
-      }
+      // Find quizzes assigned to this section
+      const quizzes = await Quiz.find({ visibleToSections: section._id });
       
-      const sId = r.student._id.toString();
-      const studentName = r.student.firstName + ' ' + r.student.lastName;
-      
-      if (!courseMap[cId].studentsMap[sId]) {
-        courseMap[cId].studentsMap[sId] = {
-          studentName: studentName,
-          highestQuizScore: r.percentage
-        };
-      } else {
-        if (r.percentage > courseMap[cId].studentsMap[sId].highestQuizScore) {
-          courseMap[cId].studentsMap[sId].highestQuizScore = r.percentage;
+      for (const quiz of quizzes) {
+        const qId = quiz._id.toString();
+        if (!quizMap[qId]) {
+          quizMap[qId] = {
+            subjectName: quiz.title, // Use Quiz Title for the tabs
+            studentsMap: {}
+          };
+        }
+        
+        // Add all students from this section to the quiz roster
+        for (const student of section.students) {
+          const sId = student._id.toString();
+          if (!quizMap[qId].studentsMap[sId]) {
+            quizMap[qId].studentsMap[sId] = {
+              studentName: student.firstName + ' ' + student.lastName,
+              highestQuizScore: null // default to null if no score
+            };
+          }
         }
       }
     }
-    
-    const subjects = Object.values(courseMap).map(c => ({
-      subjectName: c.subjectName,
-      students: Object.values(c.studentsMap)
+
+    // 2. Fetch ExamResults for these quizzes and students to populate scores
+    const quizIds = Object.keys(quizMap);
+    if (quizIds.length > 0) {
+      const results = await ExamResult.find({ quiz: { $in: quizIds } });
+      for (const r of results) {
+        const qId = r.quiz.toString();
+        const sId = r.student.toString();
+        
+        if (quizMap[qId] && quizMap[qId].studentsMap[sId]) {
+          const currentHighest = quizMap[qId].studentsMap[sId].highestQuizScore;
+          if (currentHighest === null || r.percentage > currentHighest) {
+            quizMap[qId].studentsMap[sId].highestQuizScore = r.percentage;
+          }
+        }
+      }
+    }
+
+    const subjects = Object.values(quizMap).map(q => ({
+      subjectName: q.subjectName,
+      students: Object.values(q.studentsMap)
     }));
     
     res.json({ subjects });
