@@ -30,7 +30,7 @@ export async function populateAdminCourses() {
   });
 }
 
-async function loadQuizzesForCourse(courseId) {
+export async function loadQuizzesForCourse(courseId) {
   const list = document.getElementById('prof-quizzes-list');
   list.innerHTML = '<p style="color: var(--text-dim);">Loading quizzes...</p>';
   const quizzes = await fetchQuizzesForCourse(courseId);

@@ -1,5 +1,6 @@
 import { appState } from './state.js';
 import { navigateTo } from './navigation.js';
+import { loadQuizzesForCourse } from './admin.js';
 
 let allCourses = [];
 let allQuizzes = [];
@@ -65,8 +66,12 @@ export async function initProfessorPortal() {
     
     if (!courseId) {
       container.innerHTML = '<span style="color: var(--text-dim); font-size: 0.9rem;">Select a course to view sections</span>';
+      document.getElementById('prof-quizzes-list').innerHTML = '';
       return;
     }
+
+    // Load existing quizzes for this course
+    await loadQuizzesForCourse(courseId);
     
     try {
       const res = await fetch(`/api/courses/${courseId}/sections`, {
