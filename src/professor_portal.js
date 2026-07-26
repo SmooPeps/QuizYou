@@ -133,7 +133,7 @@ function setupProfessorTabs() {
   });
 }
 
-async function fetchProfessorData() {
+export async function fetchProfessorData() {
   try {
     const courseRes = await fetch('/api/courses', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('quizyou_jwt')}` }

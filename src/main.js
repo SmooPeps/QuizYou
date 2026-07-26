@@ -6,9 +6,9 @@ import { navigateTo } from './navigation.js';
 import { setupQuiz, renderQuestion, finishQuiz } from './quiz.js';
 import { renderDashboard, loadLeaderboards, renderLeaderboards} from './dashboard.js';
 import { goBack } from './navigation.js';
-import { populateAdminCourses, setupAdminPanel } from './admin.js';
+import { setupAdminPanel } from './admin.js';
 import { initAdminManagement, setupAdminManagementHandlers } from './admin_management.js';
-import { initProfessorPortal } from './professor_portal.js';
+import { initProfessorPortal, fetchProfessorData } from './professor_portal.js';
 
 // Initialize Application
 async function init() {
@@ -161,7 +161,7 @@ document.getElementById('btn-config-leaderboard').addEventListener('click', asyn
 
   // Professor Portal Navigation
   document.getElementById('btn-config-admin').addEventListener('click', async () => {
-    await populateAdminCourses();
+    await fetchProfessorData();
     navigateTo('admin');
   });
 
