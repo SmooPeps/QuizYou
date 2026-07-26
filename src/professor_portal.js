@@ -193,11 +193,13 @@ function renderAnalytics(data) {
     <div class="analytics-grid">
       <div class="analytics-card">
         <h4>Average Score per Quiz</h4>
-        <canvas id="chart-avg-scores"></canvas>
+        <div style="position: relative; width: 100%; min-height: 300px;">
+          <canvas id="chart-avg-scores"></canvas>
+        </div>
       </div>
       <div class="analytics-card">
         <h4>Overall Grade Distribution</h4>
-        <div style="max-height: 250px; display: flex; justify-content: center;">
+        <div style="position: relative; width: 100%; min-height: 300px; display: flex; justify-content: center;">
           <canvas id="chart-grade-dist"></canvas>
         </div>
       </div>
@@ -231,6 +233,7 @@ function renderAnalytics(data) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: { beginAtZero: true, max: 100, ticks: { color: '#ccc' } },
         x: { ticks: { color: '#ccc' } }
