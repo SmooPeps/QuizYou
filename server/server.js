@@ -504,8 +504,46 @@ app.get('/api/analytics/course/:courseId', authenticate, requireProfessor, async
     // Find all quizzes in this course
     const quizzes = await Quiz.find({ course: courseId });
     const quizIds = quizzes.map(q => q._id);
+    
+    // Build a dictionary of questionId -> question.text for Item Analysis
+    const questionMap = {};
+    quizzes.forEach(q => {
+      q.questions.forEach(question => {
+        questionMap[question._id.toString()] = question.question;
+      });
+    });
 
-    // Aggregate Exam Results for these quizzes
+    // 1. Fetch all ExamResults for these quizzes
+    const results = await ExamResult.find({ quiz: { $in: quizIds } }).populate('quiz');
+    
+    // 2. Average Score per Quiz
+    const quizAverages = {};
+    results.forEach(r => {
+      if (!r.quiz) return;
+      const qTitle = r.quiz.title;
+      if (!quizAverages[qTitle]) {
+        quizAverages[qTitle] = { totalScore: 0, count: 0 };
+      }
+      quizAverages[qTitle].totalScore += r.percentage;
+      quizAverages[qTitle].count += 1;
+    });
+    
+    const avgScores = Object.keys(quizAverages).map(title => ({
+      quizTitle: title,
+      averagePercentage: parseFloat((quizAverages[title].totalScore / quizAverages[title].count).toFixed(1))
+    }));
+    
+    // 3. Grade Distribution
+    const distribution = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+    results.forEach(r => {
+      if (r.percentage >= 90) distribution.A++;
+      else if (r.percentage >= 80) distribution.B++;
+      else if (r.percentage >= 70) distribution.C++;
+      else if (r.percentage >= 60) distribution.D++;
+      else distribution.F++;
+    });
+
+    // 4. Toughest Question (Item Analysis)
     const stats = await ExamResult.aggregate([
       { $match: { quiz: { $in: quizIds } } },
       { $unwind: "$answers" },
@@ -515,16 +553,29 @@ app.get('/api/analytics/course/:courseId', authenticate, requireProfessor, async
           correctCount: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
           totalAttempts: { $sum: 1 }
         }
-      },
-      {
-        $project: {
-          questionId: "$_id",
-          successRate: { $divide: ["$correctCount", "$totalAttempts"] }
-        }
       }
     ]);
+    
+    let toughestQuestion = null;
+    let lowestRate = 1.1; // Initialize above 100%
+    
+    stats.forEach(s => {
+      const rate = s.correctCount / s.totalAttempts;
+      if (rate < lowestRate) {
+        lowestRate = rate;
+        toughestQuestion = {
+          questionId: s._id,
+          questionText: questionMap[s._id.toString()] || "Unknown Question",
+          successRate: (rate * 100).toFixed(1) + '%'
+        };
+      }
+    });
 
-    res.json({ quizzes, stats });
+    res.json({ 
+      avgScores, 
+      distribution, 
+      toughestQuestion 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

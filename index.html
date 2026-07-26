@@ -9,6 +9,7 @@
     content="An interactive exam and quiz dashboard for software engineering teams. Build, test, and track your development knowledge.">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="leaderboardstyle.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -277,8 +278,8 @@
           <div id="prof-analytics" class="admin-tab-content" style="display: none;">
             <h3 style="color: var(--primary);">Performance Analytics</h3>
             <div class="form-group"><select id="prof-analytics-course" class="form-control"><option value="">Select Course</option></select></div>
-            <div id="prof-analytics-dashboard" style="text-align: left; margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
-              <p style="color: var(--text-dim);">Select a course to view analytics.</p>
+            <div id="prof-analytics-dashboard" class="analytics-dashboard-container">
+              <p style="color: var(--text-dim); text-align: center; padding: 2rem;">Select a course to view analytics.</p>
             </div>
           </div>
 

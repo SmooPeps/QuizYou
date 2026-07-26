@@ -173,41 +173,101 @@ export async function fetchProfessorData() {
   }
 }
 
+let analyticsCharts = [];
+
 function renderAnalytics(data) {
   const dash = document.getElementById('prof-analytics-dashboard');
   dash.innerHTML = '';
+  
+  // Destroy existing charts to prevent memory leaks or overlap
+  analyticsCharts.forEach(chart => chart.destroy());
+  analyticsCharts = [];
 
-  if (!data.stats || data.stats.length === 0) {
-    dash.innerHTML = '<p style="color: var(--text-dim);">No analytics data available yet. Students need to take quizzes first.</p>';
+  if (!data.avgScores || data.avgScores.length === 0) {
+    dash.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">No analytics data available yet. Students need to take quizzes first.</p>';
     return;
   }
 
-  const list = document.createElement('div');
-  list.style.display = 'flex';
-  list.style.flexDirection = 'column';
-  list.style.gap = '1rem';
-
-  data.stats.forEach(stat => {
-    const percentage = Math.round(stat.successRate * 100);
-    let color = 'var(--accent)';
-    if (percentage < 50) color = '#ff6b6b';
-    if (percentage >= 80) color = '#51cf66';
-
-    const item = document.createElement('div');
-    item.style.padding = '1rem';
-    item.style.background = 'rgba(255,255,255,0.05)';
-    item.style.borderRadius = '8px';
-    item.innerHTML = `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-        <span>Question ID: ${stat.questionId}</span>
-        <strong style="color: ${color}">${percentage}% Success Rate</strong>
+  // Create the layout
+  dash.innerHTML = `
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <h4>Average Score per Quiz</h4>
+        <canvas id="chart-avg-scores"></canvas>
       </div>
-      <div style="font-size: 0.9rem; color: var(--text-dim);">
-        Attempts: ${stat.totalAttempts} | Correct: ${stat.correctCount}
+      <div class="analytics-card">
+        <h4>Overall Grade Distribution</h4>
+        <div style="max-height: 250px; display: flex; justify-content: center;">
+          <canvas id="chart-grade-dist"></canvas>
+        </div>
       </div>
-    `;
-    list.appendChild(item);
+      <div class="analytics-card" style="grid-column: 1 / -1;">
+        <h4>Item Analysis: Toughest Question</h4>
+        <div class="analytics-metric">
+          <span class="analytics-metric-title">Lowest Success Rate</span>
+          <span class="analytics-metric-value" style="color: #ff6b6b;">${data.toughestQuestion ? data.toughestQuestion.successRate : 'N/A'}</span>
+          <span class="analytics-metric-subtext" style="font-size: 1rem; color: var(--text-color); margin-top: 0.5rem; white-space: normal;">
+            ${data.toughestQuestion ? data.toughestQuestion.questionText : 'Not enough data to calculate toughest question yet.'}
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render Bar Chart
+  const ctxBar = document.getElementById('chart-avg-scores').getContext('2d');
+  const barChart = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: data.avgScores.map(a => a.quizTitle),
+      datasets: [{
+        label: 'Average Score (%)',
+        data: data.avgScores.map(a => a.averagePercentage),
+        backgroundColor: 'rgba(116, 123, 255, 0.6)',
+        borderColor: 'rgba(116, 123, 255, 1)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { color: '#ccc' } },
+        x: { ticks: { color: '#ccc' } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
   });
+  analyticsCharts.push(barChart);
 
-  dash.appendChild(list);
+  // Render Doughnut Chart
+  const ctxDoughnut = document.getElementById('chart-grade-dist').getContext('2d');
+  const dist = data.distribution;
+  const doughnutChart = new Chart(ctxDoughnut, {
+    type: 'doughnut',
+    data: {
+      labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'F (<60)'],
+      datasets: [{
+        data: [dist.A, dist.B, dist.C, dist.D, dist.F],
+        backgroundColor: [
+          '#51cf66', // A: Green
+          '#339af0', // B: Blue
+          '#fcc419', // C: Yellow
+          '#ff922b', // D: Orange
+          '#ff6b6b'  // F: Red
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#ccc' } }
+      }
+    }
+  });
+  analyticsCharts.push(doughnutChart);
 }
