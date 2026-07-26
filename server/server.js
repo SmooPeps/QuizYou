@@ -221,8 +221,16 @@ app.get('/api/results/history', authenticate, async (req, res) => {
 // 6.5 Get Leaderboards grouped by Quiz for the current user's sections
 app.get('/api/leaderboard', authenticate, async (req, res) => {
   try {
-    // 1. Find all sections the current user is enrolled in
-    const sections = await Section.find({ students: req.user._id }).populate('course').populate('students');
+    // 1. Find all sections the current user is associated with
+    let query = {};
+    if (req.user.role === 'student') {
+      query.students = req.user._id;
+    } else if (req.user.role === 'professor') {
+      query.professor = req.user._id;
+    }
+    // If admin, query remains {}, returning all sections.
+
+    const sections = await Section.find(query).populate('course').populate('students');
     
     const quizMap = {}; 
 
