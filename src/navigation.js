@@ -28,6 +28,17 @@ export function navigateTo(screenKey) {
     }
   });
 
+  const mainGlass = document.getElementById('main-glass-container');
+  if (mainGlass) {
+    if (screenKey === 'admin') {
+      mainGlass.style.maxWidth = '900px';
+    } else if (screenKey === 'admin-management') {
+      mainGlass.style.maxWidth = '800px';
+    } else {
+      mainGlass.style.maxWidth = '600px';
+    }
+  }
+
   if (screenKey === 'config') {
     import('./quiz.js').then(m => m.populateCourseAndQuizzes());
   }
@@ -44,6 +55,17 @@ export function goBack() {
       screens[key].classList.toggle('active', key === previousScreen);
     }
   });
+
+  const mainGlass = document.getElementById('main-glass-container');
+  if (mainGlass) {
+    if (previousScreen === 'admin') {
+      mainGlass.style.maxWidth = '900px';
+    } else if (previousScreen === 'admin-management') {
+      mainGlass.style.maxWidth = '800px';
+    } else {
+      mainGlass.style.maxWidth = '600px';
+    }
+  }
 }
 
 export function resetNavigationHistory() {
