@@ -112,7 +112,11 @@ export function getStudentRank(data, subjectId, studentId) {
 }
 
 export async function loadLeaderboards() {
-    const response = await fetch("highscores.json");
+    const response = await fetch("/api/leaderboard", {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('quizyou_jwt')}`
+      }
+    });
 
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -131,6 +135,11 @@ export function renderLeaderboards(containerId, data) {
   content.innerHTML = "";
 
   // Build tabs
+  if (!data || !data.subjects || data.subjects.length === 0) {
+    content.innerHTML = `<div class="card" style="text-align: center; padding: 2rem;"><p>No leaderboards are currently available or enabled by your professors.</p></div>`;
+    return;
+  }
+
   data.subjects.forEach((subject, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn";
@@ -149,6 +158,9 @@ export function renderLeaderboards(containerId, data) {
   });
 
   // Render selected subject
+  if (currentSubjectIndex >= data.subjects.length) {
+    currentSubjectIndex = 0;
+  }
   const subject = data.subjects[currentSubjectIndex];
   const students = [...subject.students];
 

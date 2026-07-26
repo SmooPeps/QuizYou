@@ -217,6 +217,58 @@ app.get('/api/results/history', authenticate, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// 6.5 Get Leaderboards grouped by Course
+app.get('/api/leaderboard', authenticate, async (req, res) => {
+  try {
+    const results = await ExamResult.find()
+      .populate('student')
+      .populate({
+        path: 'quiz',
+        populate: { path: 'course' }
+      });
+      
+    const courseMap = {};
+    
+    for (const r of results) {
+      if (!r.quiz || !r.quiz.course || !r.quiz.course.isLeaderboardEnabled) {
+        continue;
+      }
+      
+      const cId = r.quiz.course._id.toString();
+      if (!courseMap[cId]) {
+        courseMap[cId] = {
+          subjectName: r.quiz.course.name,
+          studentsMap: {}
+        };
+      }
+      
+      const sId = r.student._id.toString();
+      const studentName = r.student.firstName + ' ' + r.student.lastName;
+      
+      if (!courseMap[cId].studentsMap[sId]) {
+        courseMap[cId].studentsMap[sId] = {
+          studentName: studentName,
+          highestQuizScore: r.percentage
+        };
+      } else {
+        if (r.percentage > courseMap[cId].studentsMap[sId].highestQuizScore) {
+          courseMap[cId].studentsMap[sId].highestQuizScore = r.percentage;
+        }
+      }
+    }
+    
+    const subjects = Object.values(courseMap).map(c => ({
+      subjectName: c.subjectName,
+      students: Object.values(c.studentsMap)
+    }));
+    
+    res.json({ subjects });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 7. Bulk Upload Excel Questions (Professor creates a quiz inside a course)
 app.post(
   '/api/admin/courses/:courseId/quizzes/upload-excel',
