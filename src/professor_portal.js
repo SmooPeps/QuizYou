@@ -31,6 +31,16 @@ export async function initProfessorPortal() {
         body: JSON.stringify({ isLeaderboardEnabled, isTimerEnabled })
       });
       if (!res.ok) throw new Error('Failed to save settings');
+      
+      const updatedCourse = await res.json();
+      
+      // Update local state
+      const cIndex = allCourses.findIndex(c => c._id === courseId);
+      if (cIndex !== -1) {
+        allCourses[cIndex].isLeaderboardEnabled = updatedCourse.isLeaderboardEnabled;
+        allCourses[cIndex].isTimerEnabled = updatedCourse.isTimerEnabled;
+      }
+      
       alert('Course settings saved successfully!');
     } catch (err) {
       alert(err.message);

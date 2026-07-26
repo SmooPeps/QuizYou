@@ -111,7 +111,9 @@ app.get('/api/courses', authenticate, async (req, res) => {
         _id: c._id,
         code: c.code,
         name: c.name,
-        sectionCode: 'All Sections'
+        sectionCode: 'All Sections',
+        isLeaderboardEnabled: c.isLeaderboardEnabled,
+        isTimerEnabled: c.isTimerEnabled
       }));
       return res.json(mapped);
     }
@@ -126,7 +128,9 @@ app.get('/api/courses', authenticate, async (req, res) => {
         code: s.course.code,
         name: s.course.name,
         sectionCode: s.sectionCode,
-        semester: s.semester
+        semester: s.semester,
+        isLeaderboardEnabled: s.course.isLeaderboardEnabled,
+        isTimerEnabled: s.course.isTimerEnabled
       }));
 
     res.json(courses);

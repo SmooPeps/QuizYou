@@ -204,31 +204,41 @@ p {
   position: relative;
 }
 
-/* Glassmorphism Containers */
+/* Glassmorphism Containers (Liquid Glass Frost) */
 .glass-container {
-  background: var(--surface);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--surface-border);
+  /* Tint and Blur */
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  
+  /* Specular-like inner highlights and drop shadow */
+  box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.1), 
+              inset -2px -2px 3px rgba(255, 255, 255, 0.05),
+              0 8px 32px rgba(0, 0, 0, 0.4);
+  
   border-radius: var(--border-radius-lg);
   padding: 2.5rem;
   width: 100%;
   max-width: 600px;
-  box-shadow: var(--shadow-lg);
+  
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Crisp Gradient Border Mask (react-glassy technique) */
 .glass-container::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
-  opacity: 0.85;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.15) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Screen Transitions */
@@ -284,34 +294,45 @@ p {
   transform: translateY(0);
 }
 
-.btn-secondary {
-  background: var(--surface-soft);
-  border: 1px solid var(--surface-border);
+.btn-secondary, .btn-tertiary, .btn-back {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid transparent;
   color: var(--text);
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.08), 
+              0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
-.btn-back{
-  background: var(--surface-soft);
-  border: 1px solid var(--surface-border);
-  color: var(--text);
+
+.btn-secondary::before, .btn-tertiary::before, .btn-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.1) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.btn-secondary:hover, .btn-tertiary:hover, .btn-back:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.15), 
+              0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-back {
   display: flex;
   margin-top: 24px;
 }
 
-.btn-secondary:hover {
-  background: var(--surface-soft-hover);
-  transform: translateY(-2px);
-}
-
-.btn-tertiary {
-  background: transparent;
-  border: 1px solid var(--surface-border);
-  color: var(--text);
-}
-
-.btn-tertiary:hover {
-  background: var(--surface-soft-hover);
-  transform: translateY(-2px);
-}
 
 .form-group {
   margin-bottom: 1.5rem;
