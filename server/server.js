@@ -342,12 +342,24 @@ app.post(
 
         if (type === 'multiple_choice' || type === 'multi_select') {
           const options = [
-            row['Option A'],
-            row['Option B'],
-            row['Option C'],
-            row['Option D'],
-            row['Option E']
-          ]
+          row['Option A'],
+          row['Option B'],
+          row['Option C'],
+          row['Option D'],
+          row['Option E'],
+          row['Option F'],
+          row['Option G'],
+          row['Option H'],
+          row['Option I'],
+          row['Option J'],
+          row['Option K'],
+          row['Option L'],
+          row['Option M'],
+          row['Option N'],
+          row['Option O'],
+          row['Option P'],
+          row['Option Q'],
+          row['Option R']]
             .filter(value => value !== undefined && value !== null && value !== '')
             .map(value => String(value).trim());
 
