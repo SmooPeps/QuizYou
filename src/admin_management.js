@@ -352,40 +352,20 @@ export function setupAdminManagementHandlers() {
     
     // Get checked checkboxes
     const checkboxes = document.querySelectorAll('.student-checkbox:checked');
-    const addStudentIds = Array.from(checkboxes).map(cb => cb.value);
-
-    const uncheckedBoxes = document.querySelectorAll('.student-checkbox:not(:checked)');
-    const removeStudentIds = Array.from(uncheckedBoxes).map(cb => cb.value);
+    const studentIds = Array.from(checkboxes).map(cb => cb.value);
     
-    if (addStudentIds.length === 0 && removeStudentIds.length === 0) {
-      alert("Please select at least one student to enroll or remove.");
-      return;
-    }
-    
-    const removeRes = await fetch(`${BACKEND_URL}/api/sections/${sectionId}/remove`, {
-                method: 'PUT',
-                headers: getHeaders(),
-                body: JSON.stringify({ studentIds: removeStudentIds })
-});
-
-    const addRes = await fetch(`${BACKEND_URL}/api/sections/${sectionId}/enroll`, {
+    const res = await fetch(`${BACKEND_URL}/api/sections/${sectionId}/enroll`, {
       method: 'PUT',
       headers: getHeaders(),
-      body: JSON.stringify({ studentIds: addStudentIds })
+      body: JSON.stringify({ studentIds })
     });
     
-    if (removeRes.ok && addRes.ok) {
+    if (res.ok) {
       alert("Enrollments updated successfully!");
       initAdminManagement();
     } else {
-      const errAdd = await addRes.json();
-      const errRemove = await removeRes.json();
-      if (!addRes.ok) {
-        alert("Error enrolling students: " + errAdd.error);
-      }
-      if (!removeRes.ok) {
-        alert("Error removing students: " + errRemove.error);
-      }
+      const err = await res.json();
+      alert("Error updating enrollments: " + err.error);
     }
   });
 }
