@@ -729,6 +729,28 @@ app.put('/api/sections/:id/enroll', authenticate, requireAdmin, async (req, res)
   }
 });
 
+
+app.put('/api/sections/:id/remove', authenticate, requireAdmin, async (req, res) => {
+  const { studentIds } = req.body; // Array of User ObjectIds
+
+  try {
+    const section = await Section.findById(req.params.id);
+    if (!section) {
+      return res.status(404).json({ error: "Section not found" });
+    }
+
+    // Remove the selected students
+    section.students = section.students.filter(
+      studentId => !studentIds.includes(studentId.toString())
+    );
+
+    await section.save();
+    res.json(section);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- END ADMIN MANAGEMENT ENDPOINTS ---
 
 const PORT = process.env.PORT || 5001;
